@@ -1,0 +1,8 @@
+{
+    "port":1002,
+    "sendAmount":0.5,
+    "dailyLimitNum":0.5,
+    "chainRpcEndpoint":"http://chainRpcEndpoint",
+    "senderAddr":"xxxxxxxxx",
+    "senderPrivateKey":"xxxxxxxxx"
+}
