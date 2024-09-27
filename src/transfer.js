@@ -13,7 +13,7 @@ let sendETH = async (from, to, amount, privateKey, infuraUrl) => {
 
         const gasPrice = await web3.eth.getGasPrice();
         const estimatedGas = await web3.eth.estimateGas({ from, to, value });
-        const totalCostWei = new BigNumber(gasPrice).times(estimatedGas).plus(value);
+        const totalCostWei = new BigNumber(gasPrice).mul(estimatedGas).plus(value);
         const totalCostStr = totalCostWei.toString();
         const totalCostBN = new BigNumber(totalCostStr);
         const balanceBN = new BigNumber(balance);
