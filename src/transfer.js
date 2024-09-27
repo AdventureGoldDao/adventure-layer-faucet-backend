@@ -1,6 +1,5 @@
 const { Web3 } = require('web3');
-const BigNumber = require('bignumber');
-
+const BigNumber = require('bn.js');
 
 let sendETH = async (from, to, amount, privateKey, infuraUrl) => {
     console.log('start sendEth',from,to,amount);

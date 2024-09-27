@@ -1,6 +1,6 @@
 {
   "dependencies": {
-    "bignumber": "^1.1.0",
+    "bn.js": "^5.2.1",
     "express": "^4.21.0",
     "web3": "^4.13.0"
   }
