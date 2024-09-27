@@ -13,14 +13,14 @@ let sendETH = async (from, to, amount, privateKey, infuraUrl) => {
 
         const gasPrice = await web3.eth.getGasPrice();
         const estimatedGas = await web3.eth.estimateGas({ from, to, value });
-        const totalCostWei = new BigNumber(gasPrice).mul(estimatedGas).plus(value);
-        const totalCostStr = totalCostWei.toString();
-        const totalCostBN = new BigNumber(totalCostStr);
+        const totalCostBN = new BigNumber(gasPrice).mul(estimatedGas).plus(value);
+        //const totalCostStr = totalCostWei.toString();
+        //const totalCostBN = new BigNumber(totalCostStr);
         const balanceBN = new BigNumber(balance);
         if (balanceBN.lt(totalCostBN)) {
             throw new Error('Insufficient balance to cover transaction cost');
         }
-
+        console.log('begin signTransaction');
         const transaction = {
             from,
             to,
@@ -30,6 +30,7 @@ let sendETH = async (from, to, amount, privateKey, infuraUrl) => {
         };
 
         const signedTx = await web3.eth.accounts.signTransaction(transaction, privateKey);
+        console.log('begin sendSignedTransaction');
         const receipt = await web3.eth.sendSignedTransaction(signedTx.rawTransaction);
         console.log('Transaction receipt:', receipt);
         return receipt;
