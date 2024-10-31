@@ -103,7 +103,7 @@ app.post('/sendEth', async (req, res) => {
         }
 
         const receipt = await sendETH(config.senderAddr, toAddress, sendAmount, config.senderPrivateKey, config.chainRpcEndpoint);
-
+        receivedAmounts[receivedKey] += sendAmount;
         // Return success response
         res.json(json_response(receipt.transactionHash));
     } catch (error) {
