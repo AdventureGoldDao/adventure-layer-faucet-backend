@@ -1,116 +1,90 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const sendETH = require('./transfer');
-const app = express();
-
 const fs = require('fs');
 const path = require('path');
+const fetch = require('node-fetch');
+
+const app = express();
 const filePath = path.join(__dirname, '..', 'config', 'config.json');
-const data = fs.readFileSync(filePath);
-const config = JSON.parse(data);
+const config = JSON.parse(fs.readFileSync(filePath));
 
-const port = config.port;
-const sendAmount = config.sendAmount;
-const dailyLimitNum = config.dailyLimitNum;
+// Destructure configuration values for easy access
+const { port, sendAmount, dailyLimitNum, verifyKey, senderAddr, senderPrivateKey, chainRpcEndpoint } = config;
 
-let lastClearTime = new Date(); // Initialize the last reset time to the current time
-let receivedAmounts = {}; // Used to store the cumulative amount of ETH received by each address daily
+let lastClearTime = new Date(); // Track the last time daily limits were reset
+let receivedAmounts = {}; // Store the amount of ETH received by each address daily
 
-// Set middleware to parse JSON data for POST requests
-app.use(bodyParser.json());
+app.use(bodyParser.json()); // Middleware to parse JSON bodies
 
-// Set CORS headers
+// Middleware to set CORS headers
 app.use((req, res, next) => {
-    // Allow cross-origin requests from all sources
     res.setHeader('Access-Control-Allow-Origin', '*');
-    // Allow specific HTTP methods
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-    // Allow specific request headers
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-    // Proceed to the next middleware
     next();
 });
 
-let json_response = function (data, error = '') {
-    if (data) {
-        return { data: data, error: '' }
-    }
-    else {
-        return { data: '', error: error }
-    }
-}
+// Helper function to format JSON responses
+const jsonResponse = (data, error = '') => ({ data: data || '', error: error || '' });
 
-const fetch = require('node-fetch');
-
-// Function to verify the Turnstile CAPTCHA token
+// Function to verify CAPTCHA token using Cloudflare's Turnstile
 async function verifyTurnstileToken(token) {
-
-    const secretKey = config.verifyKey;
-    const url = 'https://challenges.cloudflare.com/turnstile/v0/siteverify';
-
-    const response = await fetch(url, {
+    const response = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: `secret=${secretKey}&response=${token}`,
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: `secret=${verifyKey}&response=${token}`,
     });
-
     const data = await response.json();
-    return data.success;
+    return data.success; // Return whether the CAPTCHA verification was successful
 }
 
-// Endpoint for the faucet service
+// Endpoint to handle ETH sending requests
 app.post('/sendEth', async (req, res) => {
     try {
-        const { token, username, password, toAddress } = req.body;
-        console.log(`Received request with token: ${token}, username: ${username}, password: ${password}, toAddress: ${toAddress}`);
+        const { token, toAddress } = req.body;
+        console.log(`Received request with token: ${token}, toAddress: ${toAddress}`);
 
-        const isValid = await verifyTurnstileToken(token);
-
-        if (!isValid) {
-            res.json(json_response(null, 'CAPTCHA verification failed'));
-            return;
+        // Verify CAPTCHA token
+        if (!await verifyTurnstileToken(token)) {
+            return res.json(jsonResponse(null, 'CAPTCHA verification failed'));
         }
 
-        if (!toAddress || toAddress == '') {
-            res.json(json_response(null, 'toAddress error'));
-            return;
+        // Validate the recipient address
+        if (!toAddress) {
+            return res.json(jsonResponse(null, 'toAddress error'));
         }
 
-        // Check if the daily limit (e.g., 0.5 ETH) has been exceeded
         const now = new Date();
-        const today = now.toISOString().slice(0, 10); // Get today's date
+        const today = now.toISOString().slice(0, 10);
         const receivedKey = `${toAddress}_${today}`;
 
-        // Check if it's time to clear yesterday's data
+        // Reset daily limits if a new day has started
         if (now.getDate() !== lastClearTime.getDate()) {
-            receivedAmounts = {}; // Clear the dailyLimits object
-            lastClearTime = now; // Update the last reset time to the current time
+            receivedAmounts = {};
+            lastClearTime = now;
         }
 
-        // Initialize received amount to 0
+        // Initialize the received amount for the address if not already set
         if (!receivedAmounts[receivedKey]) {
             receivedAmounts[receivedKey] = 0;
         }
 
-        // Check if today's received amount exceeds the limit
+        // Check if the daily limit has been exceeded
         if (receivedAmounts[receivedKey] + sendAmount > dailyLimitNum) {
-            res.json(json_response(null, 'Daily limit exceeded. Try again tomorrow.'));
-            return;
+            return res.json(jsonResponse(null, 'Daily limit exceeded. Try again tomorrow.'));
         }
 
-        const receipt = await sendETH(config.senderAddr, toAddress, sendAmount, config.senderPrivateKey, config.chainRpcEndpoint);
+        // Send ETH and update the received amount
+        const receipt = await sendETH(senderAddr, toAddress, sendAmount, senderPrivateKey, chainRpcEndpoint);
         receivedAmounts[receivedKey] += sendAmount;
-        // Return success response
-        res.json(json_response(receipt.transactionHash));
+        res.json(jsonResponse(receipt.transactionHash)); // Return the transaction hash
     } catch (error) {
-        // Return error response
-        res.json(json_response(null, error.message));
+        res.json(jsonResponse(null, error.message)); // Handle errors
     }
 });
 
-// Start the server
+// Start the server and listen on the configured port
 app.listen(port, () => {
     console.log(`Faucet service listening at http://localhost:${port}`);
 });
