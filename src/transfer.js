@@ -1,5 +1,4 @@
 const { Web3 } = require('./node_modules/web3/lib/commonjs/web3.js');
-const { ethers } = require("./node_modules/ethers/lib.commonjs/ethers.js");
 const BigNumber = require('./node_modules/bignumber.js/bignumber.js');
 
 // Function to send ETH
