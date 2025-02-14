@@ -1,6 +1,17 @@
 const { Web3 } = require('./node_modules/web3/lib/commonjs/web3.js');
 const BigNumber = require('./node_modules/bignumber.js/bignumber.js');
 
+/**
+ * Sends ETH from one address to another.
+ *
+ * @param {string} from - The sender's address.
+ * @param {string} to - The recipient's address.
+ * @param {number|string} amount - The amount of ETH to send.
+ * @param {string} privateKey - The private key of the sender's address.
+ * @param {string} infuraUrl - The Infura URL for connecting to the Ethereum network.
+ * @returns {Promise<Object>} - The transaction receipt.
+ * @throws {Error} - If there is an error during the transaction.
+ */
 let sendETH = async (from, to, amount, privateKey, infuraUrl) => {
     console.log('Start sending ETH:', from, to, amount);
     
