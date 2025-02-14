@@ -14,7 +14,7 @@ const BigNumber = require('./node_modules/bignumber.js/bignumber.js');
  */
 let sendETH = async (from, to, amount, privateKey, infuraUrl) => {
     console.log('Start sending ETH:', from, to, amount);
-    
+    // Initialize Web3 instance with Infura URL
     const web3 = new Web3(infuraUrl);
 
     try {
