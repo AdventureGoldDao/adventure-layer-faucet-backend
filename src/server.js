@@ -60,6 +60,54 @@ async function verifyTurnstileToken(token) {
   return data.success;
 }
 
+
+function readReceivedRecord()
+{
+    // Get today's date
+    const now = new Date();
+    const today = now.toISOString().slice(0, 10);
+    const recordPath = config.receivedRecordFilePath + today + '.json';
+
+    try {
+        // Check if record file exists
+        if (fs.existsSync(recordPath)) {
+            // Read and parse the record file
+            const recordData = fs.readFileSync(recordPath, 'utf8');
+            receivedAmounts = JSON.parse(recordData);
+        } else {
+            // If file doesn't exist, initialize empty record
+            receivedAmounts = {};
+        }
+        console.log('readReceivedRecord success:', recordPath, Object.keys(receivedAmounts).length);
+    } catch (error) {
+        console.error('readReceivedRecord failed:', error);
+        receivedAmounts = {};
+    }
+}
+
+function saveReceivedRecord()
+{
+    // Get today's date
+    const now = new Date();
+    const today = now.toISOString().slice(0, 10);
+    const recordPath = config.receivedRecordFilePath + today + '.json';
+
+    try {
+        // Create directory if it doesn't exist
+        if (!fs.existsSync(config.receivedRecordFilePath)) {
+            fs.mkdirSync(config.receivedRecordFilePath, { recursive: true });
+        }
+
+        // Save received amounts to file
+        fs.writeFileSync(recordPath, JSON.stringify(receivedAmounts, null, 2));
+        console.log('saveReceivedRecord success:', recordPath, Object.keys(receivedAmounts).length);
+    } catch (error) {
+        console.error('saveReceivedRecord failed:', error);
+    }
+
+}
+
+
 // Endpoint for the faucet service
 app.post('/sendEth', async (req, res) => {
     try {
@@ -82,7 +130,7 @@ app.post('/sendEth', async (req, res) => {
 
         // Check if the daily limit (e.g., 0.5 ETH) has been exceeded
         const now = new Date();
-        const today = now.toISOString().slice(0, 10); // Get today’s date
+        const today = now.toISOString().slice(0, 10); // Get today's date
         const receivedKey = `${toAddress}_${today}`;
         
         // Check if it's time to clear yesterday's data
@@ -96,7 +144,7 @@ app.post('/sendEth', async (req, res) => {
             receivedAmounts[receivedKey] = 0;
         }
 
-        // Check if today’s received amount exceeds the limit
+        // Check if today's received amount exceeds the limit
         if (receivedAmounts[receivedKey] + sendAmount > dailyLimitNum) {
             res.json(json_response(null, 'Daily limit exceeded. Try again tomorrow.'));
             return;
@@ -104,6 +152,8 @@ app.post('/sendEth', async (req, res) => {
 
         const receipt = await sendETH(config.senderAddr, toAddress, sendAmount, config.senderPrivateKey, config.chainRpcEndpoint);
         receivedAmounts[receivedKey] += sendAmount;
+        //save recived record after upating param receivedAmounts
+        saveReceivedRecord(receivedAmounts);
         // Return success response
         res.json(json_response(receipt.transactionHash));
     } catch (error) {
@@ -114,5 +164,8 @@ app.post('/sendEth', async (req, res) => {
 
 // Start the server
 app.listen(port, () => {
+    //read the received record of today
+    readReceivedRecord();
+    //output the booting log
     console.log(`Faucet service listening at http://localhost:${port}`);
 });
