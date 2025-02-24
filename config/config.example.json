@@ -4,5 +4,6 @@
     "dailyLimitNum":0.5,
     "chainRpcEndpoint":"http://chainRpcEndpoint",
     "senderAddr":"xxxxxxxxx",
-    "senderPrivateKey":"xxxxxxxxx"
+    "senderPrivateKey":"xxxxxxxxx",
+    "receivedRecordFilePath":"./received_record/"
 }
