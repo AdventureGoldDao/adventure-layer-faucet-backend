@@ -15,7 +15,6 @@ sh deploy.sh
 
 ## Step3: start server
 ```
-cd ..
 pm2 start src/server.js --name faucet-backend
 ```
 
