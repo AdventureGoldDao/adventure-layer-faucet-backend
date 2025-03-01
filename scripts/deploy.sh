@@ -10,7 +10,7 @@ apt-get install -y curl python3 g++ make
 
 # Install Node.js (using the NodeSource repository)
 echo "Installing Node.js..."
-curl -fsSL https://deb.nodesource.com/setup_18.x | bash -
+curl -fsSL https://deb.nodesource.com/setup_14.x | bash -
 apt-get install -y nodejs
 
 # Install npm (Node.js package manager)
