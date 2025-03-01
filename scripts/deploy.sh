@@ -2,24 +2,24 @@
 
 # Update the system package list
 echo "Updating package list..."
-sudo apt-get update
+apt-get update
 
 # Install necessary dependencies
 echo "Installing required dependencies..."
-sudo apt-get install -y curl python3 g++ make
+apt-get install -y curl python3 g++ make
 
 # Install Node.js (using the NodeSource repository)
 echo "Installing Node.js..."
-curl -fsSL https://deb.nodesource.com/setup_14.x | sudo -E bash -
-sudo apt-get install -y nodejs
+curl -fsSL https://deb.nodesource.com/setup_18.x | bash -
+apt-get install -y nodejs
 
 # Install npm (Node.js package manager)
 echo "Installing npm..."
-sudo apt-get install -y npm
+apt-get install -y npm
 
 # Install PM2
 echo "Installing PM2..."
-sudo npm install -g pm2
+npm install -g pm2
 
 # Verify the installations
 echo "Verifying installations..."
