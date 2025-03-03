@@ -11,10 +11,9 @@ You need set the praram "chainRpcEndpoint" by the l2 rpc endpoint url.
 You need set the prarm "senderAddr" by the public address for the official account who can send money out.
 You need set the prarm "senderPrivateKey" by the private key for the official account who can send money out.
 
-### Step2: install node and pm2 install node modules
+### Step2: install node modules
 ```
-cd scriptis
-sh deploy.sh
+npm install
 ```
 
 ### Step3: start server
